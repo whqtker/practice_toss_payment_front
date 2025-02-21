@@ -22,10 +22,11 @@ export const SuccessPage: React.FC = () => {
 
   useEffect(() => {
     async function confirm() {
+      // URL 파라미터 추출 및 localStorage에서 missingId 추출
       const amount = Number(searchParams.get("amount"));
       const paymentKey = searchParams.get("paymentKey");
       const orderId = searchParams.get("orderId");
-      const missingId = localStorage.getItem('missingId'); // missingId 저장
+      const missingId = localStorage.getItem('missingId');
     
       // 값 검증
       if (!orderId || !amount || !paymentKey) {
@@ -59,6 +60,7 @@ export const SuccessPage: React.FC = () => {
           body: JSON.stringify(requestData),
         });
     
+        // 서버로부터 받은 응답 처리
         if (!response.ok) {
           const errorData = await response.json();
           throw {
@@ -78,9 +80,11 @@ export const SuccessPage: React.FC = () => {
 
     confirm()
       .then((data) => {
+        // confirm()이 정상적으로 실행되면 받은 데이터를 state에 저장
         setResponseData(data);
       })
       .catch((error) => {
+        // confirm() 실행 중 에러가 발생하면 에러 페이지로 이동
         navigate(`/fail?code=${error.code}&message=${error.message}`);
       });
   }, [searchParams, navigate]);

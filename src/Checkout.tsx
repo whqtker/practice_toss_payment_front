@@ -1,7 +1,7 @@
 import { loadTossPayments, ANONYMOUS } from "@tosspayments/tosspayments-sdk";
 import React, { useEffect, useState } from "react";
 
-// Client key and customer key setup
+// clientKey, customerKey 세팅
 const clientKey: string = "test_gck_docs_Ovk5rk1EwkEbP0W43n07xlzm";
 const customerKey: string = generateRandomString();
 
@@ -22,8 +22,10 @@ export const CheckoutPage: React.FC = () => {
         const tossPayments = await loadTossPayments(clientKey);
 
         // 초기화된 토스페이먼츠 객체로 widgets() 호출 -> 결제 위젯 객체가 생성됨
-        // 파라미터로 customerKey를 전달, 비회원은 ANONYMOUS 상수 전달
+        // 파라미터로 customerKey를, 비회원은 ANONYMOUS 상수를 전달하면 됨
         const widgets = tossPayments.widgets({ customerKey });
+
+        // 생성된 위젯 객체를 state에 저장
         setWidgets(widgets);
       } catch (error) {
         console.error("Error fetching payment widget:", error);
@@ -35,10 +37,13 @@ export const CheckoutPage: React.FC = () => {
 
   useEffect(() => {
     async function renderPaymentWidgets() {
+      // 결제 위젯이 준비되지 않았다면 렌더링하지 않음
       if (!widgets) return;
 
+      // 설정된 금액을 위젯에 적용
       await widgets.setAmount(amount);
       
+      // DOM 요소에 결제 수단, 약관 위젯 렌더링
       await widgets.renderPaymentMethods({
         selector: "#payment-method",
         variantKey: "DEFAULT",
@@ -49,6 +54,7 @@ export const CheckoutPage: React.FC = () => {
         variantKey: "AGREEMENT",
       });
 
+      // 위젯이 성공적으로 렌더링되면 ready 상태를 true로 설정
       setReady(true);
     }
 
@@ -56,23 +62,29 @@ export const CheckoutPage: React.FC = () => {
   }, [widgets, amount]);
 
   useEffect(() => {
+    // URL 쿼리 파라미터에서 missingId 추출, 해당 missingId에 대한 reward fetch
     async function fetchMissingAmount() {
       try {
+        // URL에서 missingId 추출
         const urlParams = new URLSearchParams(window.location.search);
         const missingId = urlParams.get('missingId');
         
+        // missingId에 대한 검증
         if (!missingId) {
           throw new Error('Missing ID is required');
         }
 
+        // 서버 API를 호출하여 reward 조회
         const response = await fetch(`http://localhost:8080/pay/amount/${missingId}`);
         if (!response.ok) {
             throw new Error('Failed to fetch payment amount');
         }
 
+        // 서버 응답 파싱, amount 업데이트
         const data = await response.json();
         setAmount({ currency: "KRW", value: data.amount });
         
+        // 브라우저 localStorage에 missingId 저장
         localStorage.setItem('missingId', missingId);
       } catch (error) {
         console.error('Error fetching payment amount:', error);
@@ -93,9 +105,10 @@ export const CheckoutPage: React.FC = () => {
   const [missingId, setMissingId] = useState<string | null>(null);
 
   useEffect(() => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const id = urlParams.get('missingId');
-      setMissingId(id);
+    // 쿼리 문자열을 파싱하여 missingId 추출
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('missingId');
+    setMissingId(id);
   }, []);
 
   return (
