@@ -58,7 +58,6 @@ export const CheckoutPage: React.FC = () => {
   useEffect(() => {
     async function fetchMissingAmount() {
       try {
-        // Assuming the missingId is passed as a URL parameter
         const urlParams = new URLSearchParams(window.location.search);
         const missingId = urlParams.get('missingId');
         
@@ -133,9 +132,9 @@ export const CheckoutPage: React.FC = () => {
             try {
               await widgets.requestPayment({
                   orderId: generateRandomString(),
-                  orderName: `실종자 신고 포상금 (ID: ${missingId})`, // 주문명 변경
-                  successUrl: "http://localhost:5173/success",
-                  failUrl: "http://localhost:5173/fail",
+                  orderName: `실종자 신고 포상금 (ID: ${missingId})`,
+                  successUrl: window.location.origin + "/success",
+                  failUrl: window.location.origin + "/fail",
                   customerEmail: "customer123@gmail.com",
                   customerName: "김토스",
                   customerMobilePhone: "01012341234",
