@@ -25,6 +25,7 @@ export const SuccessPage: React.FC = () => {
       const amount = Number(searchParams.get("amount"));
       const paymentKey = searchParams.get("paymentKey");
       const orderId = searchParams.get("orderId");
+      const missingId = localStorage.getItem('missingId'); // missingId 저장
     
       // 값 검증
       if (!orderId || !amount || !paymentKey) {
@@ -37,13 +38,15 @@ export const SuccessPage: React.FC = () => {
       console.log("Request data:", {
         orderId,
         amount,
-        paymentKey
+        paymentKey,
+        missingId
       });
     
       const requestData = {
         orderId,
         amount,
         paymentKey,
+        missingId
       };
     
       try {
@@ -65,6 +68,7 @@ export const SuccessPage: React.FC = () => {
         }
     
         const json = await response.json();
+        localStorage.removeItem('missingId'); // 사용 후 삭제
         return json;
       } catch (error) {
         console.error("Fetch error:", error);

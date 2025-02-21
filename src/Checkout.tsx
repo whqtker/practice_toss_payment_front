@@ -11,7 +11,7 @@ interface Amount {
 }
 
 export const CheckoutPage: React.FC = () => {
-  const [amount, setAmount] = useState<Amount>({ currency: "KRW", value: 50000 });
+  const [amount, setAmount] = useState<Amount>({ currency: "KRW", value: 0 });
   const [ready, setReady] = useState<boolean>(false);
   const [widgets, setWidgets] = useState<any>(null);
 
@@ -55,6 +55,34 @@ export const CheckoutPage: React.FC = () => {
     renderPaymentWidgets();
   }, [widgets, amount]);
 
+  useEffect(() => {
+    async function fetchMissingAmount() {
+      try {
+        // Assuming the missingId is passed as a URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const missingId = urlParams.get('missingId');
+        
+        if (!missingId) {
+          throw new Error('Missing ID is required');
+        }
+
+        const response = await fetch(`http://localhost:8080/pay/amount/${missingId}`);
+        if (!response.ok) {
+            throw new Error('Failed to fetch payment amount');
+        }
+
+        const data = await response.json();
+        setAmount({ currency: "KRW", value: data.amount });
+        
+        localStorage.setItem('missingId', missingId);
+      } catch (error) {
+        console.error('Error fetching payment amount:', error);
+      }
+    }
+
+    fetchMissingAmount();
+  }, []);
+
   const updateAmount = async (newAmount: Amount) => {
     setAmount(newAmount);
 
@@ -62,6 +90,14 @@ export const CheckoutPage: React.FC = () => {
     // 쿠폰 등으로 결제 금액 업데이트 시에도 setAmount() 호출
     await widgets.setAmount(newAmount);
   };
+
+  const [missingId, setMissingId] = useState<string | null>(null);
+
+  useEffect(() => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const id = urlParams.get('missingId');
+      setMissingId(id);
+  }, []);
 
   return (
     <div className="wrapper">
@@ -96,17 +132,17 @@ export const CheckoutPage: React.FC = () => {
           onClick={async () => {
             try {
               await widgets.requestPayment({
-                orderId: generateRandomString(),
-                orderName: "토스 티셔츠 외 2건",
-                successUrl: "http://localhost:5173/success",
-                failUrl: "http://localhost:5173/fail",
-                customerEmail: "customer123@gmail.com",
-                customerName: "김토스",
-                customerMobilePhone: "01012341234",
-              });
-            } catch (error) {
-              console.error(error);
-            }
+                  orderId: generateRandomString(),
+                  orderName: `실종자 신고 포상금 (ID: ${missingId})`, // 주문명 변경
+                  successUrl: "http://localhost:5173/success",
+                  failUrl: "http://localhost:5173/fail",
+                  customerEmail: "customer123@gmail.com",
+                  customerName: "김토스",
+                  customerMobilePhone: "01012341234",
+               });
+              } catch (error) {
+                  console.error(error);
+              }
           }}
         >
           결제하기

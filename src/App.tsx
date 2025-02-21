@@ -8,6 +8,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<CheckoutPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} /> {/* 추가된 라우트 */}
         <Route path="/success" element={<SuccessPage />} />
         <Route path="/fail" element={<FailPage />} />
       </Routes>
