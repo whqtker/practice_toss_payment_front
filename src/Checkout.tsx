@@ -62,36 +62,24 @@ export const CheckoutPage: React.FC = () => {
   }, [widgets, amount]);
 
   useEffect(() => {
-    // URL 쿼리 파라미터에서 missingId 추출, 해당 missingId에 대한 reward fetch
-    async function fetchMissingAmount() {
+    async function fetchAmount() {
       try {
-        // URL에서 missingId 추출
+        // URL 파라미터에서 amount 추출
         const urlParams = new URLSearchParams(window.location.search);
-        const missingId = urlParams.get('missingId');
+        const amount = urlParams.get('amount');
         
-        // missingId에 대한 검증
-        if (!missingId) {
-          throw new Error('Missing ID is required');
+        if (!amount) {
+          throw new Error('Amount is required');
         }
 
-        // 서버 API를 호출하여 reward 조회
-        const response = await fetch(`http://localhost:8080/pay/amount/${missingId}`);
-        if (!response.ok) {
-            throw new Error('Failed to fetch payment amount');
-        }
-
-        // 서버 응답 파싱, amount 업데이트
-        const data = await response.json();
-        setAmount({ currency: "KRW", value: data.amount });
-        
-        // 브라우저 localStorage에 missingId 저장
-        localStorage.setItem('missingId', missingId);
+        // amount를 정수로 변환하여 state에 저장
+        setAmount({ currency: "KRW", value: parseInt(amount) });
       } catch (error) {
-        console.error('Error fetching payment amount:', error);
+        console.error('Error setting payment amount:', error);
       }
     }
 
-    fetchMissingAmount();
+    fetchAmount();
   }, []);
 
   const updateAmount = async (newAmount: Amount) => {
@@ -101,15 +89,6 @@ export const CheckoutPage: React.FC = () => {
     // 쿠폰 등으로 결제 금액 업데이트 시에도 setAmount() 호출
     await widgets.setAmount(newAmount);
   };
-
-  const [missingId, setMissingId] = useState<string | null>(null);
-
-  useEffect(() => {
-    // 쿼리 문자열을 파싱하여 missingId 추출
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('missingId');
-    setMissingId(id);
-  }, []);
 
   return (
     <div className="wrapper">
@@ -144,17 +123,16 @@ export const CheckoutPage: React.FC = () => {
           onClick={async () => {
             try {
               await widgets.requestPayment({
-                  orderId: generateRandomString(),
-                  orderName: `실종자 신고 포상금 (ID: ${missingId})`,
-                  successUrl: window.location.origin + "/success",
-                  failUrl: window.location.origin + "/fail",
-                  customerEmail: "customer123@gmail.com",
-                  customerName: "김토스",
-                  customerMobilePhone: "01012341234",
-               });
-              } catch (error) {
-                  console.error(error);
-              }
+                orderId: generateRandomString(),
+                orderName: `결제 금액: ${amount.value}원`,
+                successUrl: window.location.origin + "/success",
+                failUrl: window.location.origin + "/fail",
+                customerEmail: "customer123@gmail.com",
+                customerName: "김토스",
+              });
+            } catch (error) {
+              console.error(error);
+            }
           }}
         >
           결제하기
